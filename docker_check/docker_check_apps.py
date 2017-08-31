@@ -174,7 +174,17 @@ class Apps(unittest.TestCase):
 
 	@classmethod
 	def tearDownClass(cls):
-		pass
+		num = [i + 1 for i in range(len(cls.apps))]
+		names = [app.pkg_name for app in cls.apps]
+		execstr = [app.exec_str for app in cls.apps]
+		desktoppath = [app.desktop_path for app in cls.apps]
+		install_status = [app.installed_status for app in cls.apps]
+		remove_status = [app.removed_status for app in cls.apps]
+		result = [num, names, execstr, desktoppath, install_status, remove_status]
+		title = ['number', 'name', 'exec_cmd', 'desktop_file', 'install_status', 'remove_status']
+		with open('result.html', 'w') as f:
+			f.write(convertToHtml(result, title))
+		f.close()
 
 
 
