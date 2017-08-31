@@ -2,7 +2,7 @@
 
 apt-get update
 apt-get -y install python3-pip
-#pip3 install --trusted-host pypi.douban.com -i http://pypi.douban.com/simple/ pandas
+LC_CTYPE="en_US.UTF-8" pip3 install --trusted-host pypi.douban.com -i http://pypi.douban.com/simple/ pandas
 cd /docker_check_pkgs_install_remove/check_pkgs_install_remove/docker_check
 #python3 get_sourcelist.py
 #mv /etc/apt/sources.list /etc/apt/sources.list.bak

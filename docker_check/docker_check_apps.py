@@ -19,7 +19,7 @@ remove_cmd = 'lastore-tools test -j remove '
 config_cmd = 'sudo dpkg --configure -a'
 fix_broken_cmd = 'sudo apt-get -fy install'
 
-
+'''
 def get_default_pkgs():
 	DIRNAME = '/usr/share/applications'
 	desktopfiles = [file for file in os.listdir(DIRNAME) if
@@ -31,7 +31,7 @@ def get_default_pkgs():
 default_apps = get_default_pkgs()
 need_passwd_apps = ['cpu-g', 'cinelerra', 'gparted', 'mintdrivers', 'synaptic', 'gufw', 'vmware-workstation-install', 'unetbootin', 'tickeys', 'myeclipse']
 
-
+'''
 
 
 def getpids():
@@ -42,7 +42,7 @@ def getpids():
 def getapps():
 	#apps = [a['id'] for a in json.loads(open(JSON_PATH, 'r').read()).values()]
 	o = getoutput(list_pkgs_cmd)
-	pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')[:3]]
+	pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')[:2]]
 	#pkgs = ['libflashplugin-pepper']
 	#pkgsobj = [Pkgs(pkg) for pkg in pkgs]
 	return pkgsobj
@@ -166,44 +166,22 @@ class Apps(unittest.TestCase):
 		cls.apps = getapps()
 		names = [app.pkg_name for app in cls.apps]
 		print(names)
-		cls.pkgs_info =  open('pkgs.info', 'w')
-
+		cls.pkgs_info = open('pkgs.info', 'w')
 		cls.apt_cache = apt.cache.Cache()
 		cls.apt_cache.update()
+
+
+
 	@classmethod
 	def tearDownClass(cls):
-		num = [i+1 for i in range(len(cls.apps))]
-		names = [app.pkg_name for app in cls.apps]
-		execstr = [app.exec_str for app in cls.apps]
-		desktoppath = [app.desktop_path for app in cls.apps]
-		install_status = [app.installed_status for app in cls.apps]
-		remove_status = [app.removed_status for app in cls.apps]
-		result = [num, names, execstr, desktoppath, install_status, remove_status]
-		title = ['number', 'name', 'exec_cmd', 'desktop_file', 'install_status', 'remove_status']
-		'''
-		with open('result.html', 'w') as f:
-			f.write(convertToHtml(result, title))
-		f.close()
-		'''
-		with open('pkgs.info', 'a') as f:
-			nodesktopfile = [app.pkg_name for app in cls.apps if app.desktop_path is None and app.installed_status != 'failed']
-			f.write('pkgs no desktopfile:\n\n')
-			for nodesktopfileapp in nodesktopfile:
-				f.write(nodesktopfileapp+'\n')
-			f.write('pkgs install failed:\n\n')
-			for install_app in cls.install_failed:
-				f.write(install_app+'\n')
-			f.write('pkgs remove failed:\n\n')
-			for remove_app in cls.remove_failed:
-				f.write(remove_app+'\n')
-			f.write(cls.starttime+'\n')
-			f.write(time.ctime()+'\n')
-		f.close()
+		pass
 
-	def writeinfo(self, pkg, status=None, err=None):
-		info = "app[%s] %s failed:\n %s\n\n" % (pkg,status,err)
-		self.pkgs_info.write(info)
-		self.pkgs_info.close()
+
+
+	def writeoneinfo(self, info):
+		self.pkgs_info.write(info + '\n')
+		#self.pkgs_info.close()
+
 
 	def install(self, app):
 		self.apt_cache.update()
@@ -220,7 +198,10 @@ class Apps(unittest.TestCase):
 			try:
 				self.apt_cache.commit()
 			except Exception as e:
-				self.writeinfo(app.pkg_name, status='install', err=str(e))
+				app.installed_status = 'failed'
+				self.install_failed.append(app.pkg_name)
+				#self.writeinfo(app.pkg_name, status='install', err=str(e))
+		app.desktop_path = get_desktop_name(app.pkg_name)
 
 	def remove(self, app):
 		self.apt_cache.open(None)
@@ -239,19 +220,31 @@ class Apps(unittest.TestCase):
 					resolver.remove(pkg)
 		try:
 			self.apt_cache.commit()
-			self.apt_cache.close()
 		except Exception as e:
-			self.writeinfo(app.pkg_name, status='remove', err=str(e))
+			app.removed_status = 'failed'
+			self.remove_failed.append(app.pkg_name)
+			#self.writeinfo(app.pkg_name, status='remove', err=str(e))
 
 	def test_update(self):
 		s, o = getstatusoutput('lastore-tools test -j update')
 
 	def test_apps(self):
 		for app in self.apps:
-			self.install(app.pkg_name)
-			self.remove(app.pkg_name)
-
-
+			self.install(app)
+			self.remove(app)
+		nodesktopfile = [app.pkg_name for app in self.apps if
+						 app.desktop_path is None and app.installed_status != 'failed']
+		self.writeoneinfo('pkgs no desktopfile')
+		for nodesktopfileapp in nodesktopfile:
+			self.writeoneinfo(nodesktopfileapp)
+			self.writeoneinfo('pkgs install failed:')
+		for install_app in self.install_failed:
+			self.writeoneinfo(install_app)
+			self.writeoneinfo('pkgs remove failed:')
+		for remove_app in self.remove_failed:
+			self.writeoneinfo(remove_app)
+		self.writeoneinfo(self.starttime)
+		self.writeoneinfo(time.ctime())
 
 def suite():
 	suite = unittest.TestSuite()
