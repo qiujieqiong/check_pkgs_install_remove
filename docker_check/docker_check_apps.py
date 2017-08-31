@@ -212,6 +212,7 @@ class Apps(unittest.TestCase):
 				self.install_failed.append(app.pkg_name)
 				#self.writeinfo(app.pkg_name, status='install', err=str(e))
 		app.desktop_path = get_desktop_name(app.pkg_name)
+		app.exec_str = get_desktop_exec(app.pkg_name)
 
 	def remove(self, app):
 		self.apt_cache.open(None)
@@ -247,10 +248,10 @@ class Apps(unittest.TestCase):
 		self.writeoneinfo('pkgs no desktopfile')
 		for nodesktopfileapp in nodesktopfile:
 			self.writeoneinfo(nodesktopfileapp)
-			self.writeoneinfo('pkgs install failed:')
+		self.writeoneinfo('pkgs install failed:')
 		for install_app in self.install_failed:
 			self.writeoneinfo(install_app)
-			self.writeoneinfo('pkgs remove failed:')
+		self.writeoneinfo('pkgs remove failed:')
 		for remove_app in self.remove_failed:
 			self.writeoneinfo(remove_app)
 		self.writeoneinfo(self.starttime)
