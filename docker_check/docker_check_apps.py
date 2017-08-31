@@ -7,9 +7,8 @@ from time import sleep
 import unittest
 import threading
 import os, sys
-import pandas as pd
 import time
-
+import apt
 
 
 JSON_PATH = '/var/lib/lastore/applications.json'
@@ -42,10 +41,10 @@ def getpids():
 
 def getapps():
 	#apps = [a['id'] for a in json.loads(open(JSON_PATH, 'r').read()).values()]
-	#o = getoutput(list_pkgs_cmd)
-	#pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')]
-	pkgs = ['libflashplugin-pepper']
-	pkgsobj = [Pkgs(pkg) for pkg in pkgs]
+	o = getoutput(list_pkgs_cmd)
+	pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')[:3]]
+	#pkgs = ['libflashplugin-pepper']
+	#pkgsobj = [Pkgs(pkg) for pkg in pkgs]
 	return pkgsobj
 
 
@@ -167,9 +166,10 @@ class Apps(unittest.TestCase):
 		cls.apps = getapps()
 		names = [app.pkg_name for app in cls.apps]
 		print(names)
-		with open('pkgs.info', 'w') as f:
-			f.write('pkgs install/open/remove info:\n\n')
-		f.close()
+		cls.pkgs_info =  open('pkgs.info', 'w')
+
+		cls.apt_cache = apt.cache.Cache()
+		cls.apt_cache.update()
 	@classmethod
 	def tearDownClass(cls):
 		num = [i+1 for i in range(len(cls.apps))]
@@ -180,9 +180,11 @@ class Apps(unittest.TestCase):
 		remove_status = [app.removed_status for app in cls.apps]
 		result = [num, names, execstr, desktoppath, install_status, remove_status]
 		title = ['number', 'name', 'exec_cmd', 'desktop_file', 'install_status', 'remove_status']
+		'''
 		with open('result.html', 'w') as f:
 			f.write(convertToHtml(result, title))
 		f.close()
+		'''
 		with open('pkgs.info', 'a') as f:
 			nodesktopfile = [app.pkg_name for app in cls.apps if app.desktop_path is None and app.installed_status != 'failed']
 			f.write('pkgs no desktopfile:\n\n')
@@ -198,57 +200,57 @@ class Apps(unittest.TestCase):
 			f.write(time.ctime()+'\n')
 		f.close()
 
+	def writeinfo(self, pkg, status=None, err=None):
+		info = "app[%s] %s failed:\n %s\n\n" % (pkg,status,err)
+		self.pkgs_info.write(info)
+		self.pkgs_info.close()
+
+	def install(self, app):
+		self.apt_cache.update()
+		#if app.pkg_name == 'draftsight':
+		#	return
+		# install
+		pkg = self.apt_cache[app.pkg_name]
+
+		if pkg.is_installed:
+			app.installed_status = 'existed'
+
+		else:
+			pkg.mark_install()
+			try:
+				self.apt_cache.commit()
+			except Exception as e:
+				self.writeinfo(app.pkg_name, status='install', err=str(e))
+
+	def remove(self, app):
+		self.apt_cache.open(None)
+		pkg = self.apt_cache[app.pkg_name]
+		self.apt_cache.update()
+		pkg.mark_delete(True, purge=True)
+		resolver = apt.cache.ProblemResolver(self.apt_cache)
+
+		if pkg.is_installed is False:
+			print(app.pkg_name + " not installed so not removed")
+		else:
+			for pkg in self.apt_cache.get_changes():
+				if pkg.mark_delete:
+					print(app.pkg_name + " is installed and will be removed")
+					print(" %d package(s) will be removed" % self.apt_cache.delete_count)
+					resolver.remove(pkg)
+		try:
+			self.apt_cache.commit()
+			self.apt_cache.close()
+		except Exception as e:
+			self.writeinfo(app.pkg_name, status='remove', err=str(e))
+
 	def test_update(self):
 		s, o = getstatusoutput('lastore-tools test -j update')
 
 	def test_apps(self):
-		with open('pkgs.info', 'a') as f:
-			for app in self.apps:
-				if app.pkg_name == 'draftsight':
-					continue
-				# install
-				if app.pkg_name in default_apps:
-					app.installed_status = 'existed'
+		for app in self.apps:
+			self.install(app.pkg_name)
+			self.remove(app.pkg_name)
 
-				if app.pkg_name not in default_apps:
-					s, o = install_app(app.pkg_name)
-					if s == 0:
-						app.installed_status = 'passed'
-						self.install_passed.append(app.pkg_name)
-						print('install %s passed\n' % app.pkg_name)
-					elif s != 0 and app_isInstalled(app.pkg_name):
-						app.installed_status = 'existed'
-						self.existed_services.append(app.pkg_name)
-					else:
-						app.installed_status = 'failed'
-						self.install_failed.append(app.pkg_name)
-						f.write('[%s] install failed:\n %s\n\n' % (app.pkg_name, o))
-						print('install %s failed\n' % app.pkg_name)
-
-				# remove app
-				no_need_remove_apps = list(set(default_apps).union(self.existed_services))
-				if app.pkg_name not in no_need_remove_apps:
-					s, o = remove_app(app.pkg_name)
-
-					if s == 0:
-						app.removed_status = 'passed'
-						self.remove_passed.append(app.pkg_name)
-						print('remove %s passed\n' % app.pkg_name)
-					else:
-						f.write('[%s] remove failed: \n %s\n\n' % (app.pkg_name, o))
-						app.removed_status = 'failed'
-						self.remove_failed.append(app.pkg_name)
-						print('remove %s failed\n' % app.pkg_name)
-				else:
-					app.removed_status = 'default app, do not remove'
-
-
-		f.close()
-
-
-
-
-apps = Apps()
 
 
 def suite():
