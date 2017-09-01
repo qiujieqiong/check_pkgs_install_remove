@@ -60,8 +60,6 @@ def get_desktop_name(pkgname):
 	system_obj = system_bus.get_object(dbusDir, dbusObj)
 	system_if = dbus.Interface(system_obj, dbus_interface=ifc)
 	desktop_path = system_if.PackageDesktopPath(pkgname)
-	if desktop_path == '':
-		return
 	'''
 	desktop_path = getoutput(desktop_cmd + pkgname)
 	'''
