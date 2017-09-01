@@ -214,7 +214,7 @@ class Apps(unittest.TestCase):
 				#self.writeinfo(app.pkg_name, status='install', err=str(e))
 		app.desktop_path = get_desktop_name(app.pkg_name)
 		app.exec_str = get_desktop_exec(app.pkg_name)
-		print(app.pkg_name + " desktopfile: " + app.desktop_path)
+
 
 	def remove(self, app):
 		self.apt_cache.open(None)
