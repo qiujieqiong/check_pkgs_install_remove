@@ -14,9 +14,11 @@ import apt
 
 JSON_PATH = '/var/lib/lastore/applications.json'
 list_pkgs_cmd = 'lastore-tools test -j search'
-install_cmd = 'lastore-tools test -j install '
+#install_cmd = 'lastore-tools test -j install '
+install_cmd = 'sudo DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -y install '
 desktop_cmd = 'lastore-tools querydesktop '
-remove_cmd = 'lastore-tools test -j remove '
+#remove_cmd = 'lastore-tools test -j remove '
+remove_cmd = 'sudo apt-get -fy remove '
 config_cmd = 'sudo dpkg --configure -a'
 fix_broken_cmd = 'sudo apt-get -fy install'
 
