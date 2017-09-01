@@ -20,7 +20,7 @@ remove_cmd = 'lastore-tools test -j remove '
 config_cmd = 'sudo dpkg --configure -a'
 fix_broken_cmd = 'sudo apt-get -fy install'
 
-'''
+
 def get_default_pkgs():
 	DIRNAME = '/usr/share/applications'
 	desktopfiles = [file for file in os.listdir(DIRNAME) if
@@ -32,7 +32,7 @@ def get_default_pkgs():
 default_apps = get_default_pkgs()
 need_passwd_apps = ['cpu-g', 'cinelerra', 'gparted', 'mintdrivers', 'synaptic', 'gufw', 'vmware-workstation-install', 'unetbootin', 'tickeys', 'myeclipse']
 
-'''
+
 
 
 def getpids():
@@ -43,7 +43,7 @@ def getpids():
 def getapps():
 	#apps = [a['id'] for a in json.loads(open(JSON_PATH, 'r').read()).values()]
 	o = getoutput(list_pkgs_cmd)
-	pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')]
+	pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')[1]]
 	#pkgs = ['libflashplugin-pepper']
 	#pkgsobj = [Pkgs(pkg) for pkg in pkgs]
 	return pkgsobj
@@ -168,8 +168,8 @@ class Apps(unittest.TestCase):
 		names = [app.pkg_name for app in cls.apps]
 		print(names)
 		cls.pkgs_info = open('pkgs.info', 'w')
-		cls.apt_cache = apt.cache.Cache()
-		cls.apt_cache.update()
+		#cls.apt_cache = apt.cache.Cache()
+		#cls.apt_cache.update()
 
 
 
@@ -193,6 +193,8 @@ class Apps(unittest.TestCase):
 		self.pkgs_info.write(info + '\n')
 		#self.pkgs_info.close()
 
+	def writeinfos(self, pkgname, status, info):
+		self.pkgs_info.write(pkgname + '\t' + status + '\n' + info + '\n')
 
 	def install(self, app):
 		self.apt_cache.update()
@@ -243,19 +245,55 @@ class Apps(unittest.TestCase):
 
 	def test_apps(self):
 		for app in self.apps:
-			self.install(app)
-			self.remove(app)
+			#install app
+			if app.pkg_name == 'draftsight':
+				continue
+			if app.pkg_name in default_apps:
+				app.installed_status = 'existed'
+			if app.pkg_name not in default_apps:
+				s, o = install_app(app.pkg_name)
+				if s == 0:
+					app.installed_status = 'passed'
+					self.install_passed.append(app.pkg_name)
+					print('install %s passed\n' % app.pkg_name)
+				elif s != 0 and app_isInstalled(app.pkg_name):
+					app.installed_status = 'existed'
+					self.existed_services.append(app.pkg_name)
+				else:
+					app.installed_status = 'failed'
+					self.install_failed.append(app.pkg_name)
+					self.writeinfos(app.pkg_name, 'install failled', o)
+					print('install %s failed\n' % app.pkg_name)
+				app.desktop_path = get_desktop_name(app.pkg_name)
+			app.exec_str = get_desktop_exec(app.pkg_name)
+			print('app [%r]:desktopfile:[%r] run cmd [%r] ' % (app.pkg_name, app.desktop_path, app.exec_str))
+
+			#remove app
+			no_need_remove_apps = list(set(default_apps).union(self.existed_services))
+			if app.pkg_name not in no_need_remove_apps:
+				s, o = remove_app(app.pkg_name)
+				if s == 0:
+					app.removed_status = 'passed'
+					self.remove_passed.append(app.pkg_name)
+					print('remove %s passed\n' % app.pkg_name)
+				else:
+					self.writeinfos(app.pkg_name, 'remove failed', o)
+					app.removed_status = 'failed'
+					self.remove_failed.append(app.pkg_name)
+					print('remove %s failed\n' % app.pkg_name)
+			else:
+				app.removed_status = 'default app, do not remove'
 		nodesktopfile = [app.pkg_name for app in self.apps if
 						 app.desktop_path is None and app.installed_status != 'failed']
 		self.writeoneinfo('pkgs no desktopfile')
 		for nodesktopfileapp in nodesktopfile:
 			self.writeoneinfo(nodesktopfileapp)
 		self.writeoneinfo('pkgs install failed:')
-		for install_app in self.install_failed:
-			self.writeoneinfo(install_app)
+		for install in self.install_failed:
+			self.writeoneinfo(install)
 		self.writeoneinfo('pkgs remove failed:')
-		for remove_app in self.remove_failed:
-			self.writeoneinfo(remove_app)
+		for remove in self.remove_failed:
+			self.writeoneinfo(remove)
 		self.writeoneinfo(self.starttime)
 		self.writeoneinfo(time.ctime())
 
