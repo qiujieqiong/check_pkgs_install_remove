@@ -266,9 +266,9 @@ class Apps(unittest.TestCase):
 					self.install_failed.append(app.pkg_name)
 					self.writeinfos(app.pkg_name, 'install failled', o)
 					print('install %s failed\n' % app.pkg_name)
-				app.desktop_path = get_desktop_name(app.pkg_name)
+			app.desktop_path = get_desktop_name(app.pkg_name)
 			app.exec_str = get_desktop_exec(app.pkg_name)
-			print('app [%r]:desktopfile:[%r] run cmd [%r] ' % (app.pkg_name, app.desktop_path, app.exec_str))
+			print('app [%r]:desktopfile:[%r] exec: [%r] ' % (app.pkg_name, app.desktop_path, app.exec_str))
 
 			#remove app
 			no_need_remove_apps = list(set(default_apps).union(self.existed_services))
