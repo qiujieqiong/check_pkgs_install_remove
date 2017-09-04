@@ -10,5 +10,7 @@ cd /docker_check_pkgs_install_remove/check_pkgs_install_remove/docker_check
 #mv rpa.list /etc/apt/sources.list.d/
 #mv upstream.list /etc/apt/sources.list.d/
 apt-get -y update
+env
+export LANG=en_US.UTF-8
 python3 docker_check_apps.py
 cat pkgs.info
