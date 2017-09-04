@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+#-*- encoding:utf-8 -*-
 
 import dbus
 from subprocess import getoutput, getstatusoutput
