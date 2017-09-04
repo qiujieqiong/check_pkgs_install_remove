@@ -97,8 +97,11 @@ def fix_install_failed():
 	getstatusoutput(fix_broken_cmd)
 
 def install_app(app):
-	fix_install_failed()
+	#fix_install_failed()
 	s, o = getstatusoutput(install_cmd + app)
+	if o != 0:
+		fix_install_failed()
+		s, o = getstatusoutput(install_cmd + app)
 	return s, o
 
 
