@@ -45,10 +45,10 @@ def getpids():
 
 def getapps():
 	#apps = [a['id'] for a in json.loads(open(JSON_PATH, 'r').read()).values()]
-	#o = getoutput(list_pkgs_cmd)
-	#pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')]
-	pkgs = ['all.fm', 'electronic-wechat']
-	pkgsobj = [Pkgs(pkg) for pkg in pkgs]
+	o = getoutput(list_pkgs_cmd)
+	pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')]
+	#pkgs = ['all.fm', 'electronic-wechat']
+	#pkgsobj = [Pkgs(pkg) for pkg in pkgs]
 	return pkgsobj
 
 
@@ -101,8 +101,11 @@ def install_app(app):
 	s, o = getstatusoutput(install_cmd + app)
 	if o != 0:
 		fix_install_failed()
-		s, o = getstatusoutput(install_cmd + app)
+		s1, o1 = getstatusoutput(install_cmd + app)
+		if o1 != 0:
+			return s1, o1
 	return s, o
+
 
 
 def remove_app(app):
