@@ -47,7 +47,7 @@ def getapps():
 	#apps = [a['id'] for a in json.loads(open(JSON_PATH, 'r').read()).values()]
 	#o = getoutput(list_pkgs_cmd)
 	#pkgsobj = [Pkgs(pkg) for pkg in o.split('\n')]
-	pkgs = ['electronic-wechat']
+	pkgs = ['all.fm', 'electronic-wechat']
 	pkgsobj = [Pkgs(pkg) for pkg in pkgs]
 	return pkgsobj
 
