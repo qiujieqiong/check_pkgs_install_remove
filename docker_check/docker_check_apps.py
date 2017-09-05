@@ -109,9 +109,13 @@ def install_app(app):
 
 
 def remove_app(app):
-	getoutput(config_cmd)
 	s, o = getstatusoutput(remove_cmd + app)
-	return s, o
+	if o != 0:
+		fix_install_failed()
+		s1, o1 = getstatusoutput(remove_cmd + app)
+		if o1 != 0:
+			return s1, o1
+		return s, o
 
 
 def run_app(app):
