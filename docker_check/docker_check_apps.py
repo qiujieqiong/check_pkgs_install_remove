@@ -282,8 +282,9 @@ class Apps(unittest.TestCase):
 					app.installed_status = 'passed'
 					self.install_passed.append(app.pkg_name)
 					print('install %s passed\n' % app.pkg_name)
-				elif s != 0 and app_isInstalled(app.pkg_name):
+				elif s == 0 and app_isInstalled(app.pkg_name):
 					app.installed_status = 'existed'
+					print('%s existed\n' % app.pkg_name)
 					self.existed_services.append(app.pkg_name)
 				else:
 					app.installed_status = 'failed'
@@ -308,6 +309,7 @@ class Apps(unittest.TestCase):
 					self.remove_failed.append(app.pkg_name)
 					print('remove %s failed\n' % app.pkg_name)
 			else:
+				print('%s default app, do not remove' % app.pkg_name)
 				app.removed_status = 'default app, do not remove'
 		nodesktopfile = [app.pkg_name for app in self.apps if
 						 app.desktop_path is None and app.installed_status != 'failed']
