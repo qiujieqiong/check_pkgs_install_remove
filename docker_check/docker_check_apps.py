@@ -25,8 +25,9 @@ fix_broken_cmd = 'sudo apt-get -fy install'
 rm_lock1 = 'sudo rm -f /var/lib/apt/lists/lock'
 rm_lock2 = 'sudo rm -f /var/cache/apt/archives/lock'
 rm_lock3 = 'sudo rm -f /var/lib/dpkg/lock'
+rm_deb = 'sudo rm -f /var/cache/apt/archives/*.deb'
 kill_apt = 'sudo killall apt-get'
-
+autoremove = 'sudo apt autoremove'
 
 def get_default_pkgs():
 	DIRNAME = '/usr/share/applications'
@@ -102,7 +103,9 @@ def fix_install_failed():
 	getstatusoutput(rm_lock1)
 	getstatusoutput(rm_lock2)
 	getstatusoutput(rm_lock3)
-	getstatusoutput(kill_apt)
+	getstatusoutput(rm_lock3)
+	getstatusoutput(rm_deb)
+	getstatusoutput(autoremove)
 
 
 def install_app(app):
