@@ -26,7 +26,10 @@ desktop_cmd = 'lastore-tools querydesktop '
 remove_cmd = 'lastore-tools test -j remove '
 config_cmd = 'sudo dpkg --configure -a'
 fix_broken_cmd = 'sudo apt-get -fy install'
-
+rm_lock1 = 'sudo rm -f /var/lib/apt/lists/lock'
+rm_lock2 = 'sudo rm -f /var/cache/apt/archives/lock'
+rm_lock3 = 'sudo rm -f /var/lib/dpkg/lock'
+kill_apt = 'sudo killall apt-get'
 
 def get_default_pkgs():
 	DIRNAME = '/usr/share/applications'
@@ -110,16 +113,34 @@ def get_desktop_exec(pkgname):
 def fix_install_failed():
 	getstatusoutput(config_cmd)
 	getstatusoutput(fix_broken_cmd)
+	getstatusoutput(rm_lock1)
+	getstatusoutput(rm_lock2)
+	getstatusoutput(rm_lock3)
+	getstatusoutput(kill_apt)
 
 def install_app(app):
-	fix_install_failed()
 	s, o = getstatusoutput(install_cmd + app)
+	if o != 0:
+
+		fix_install_failed()
+		print("fix install failed")
+		s1, o1 = getstatusoutput(install_cmd + app)
+		print("install again")
+		if o1 != 0:
+			return s1, o1
 	return s, o
 
 
 def remove_app(app):
-	getoutput(config_cmd)
 	s, o = getstatusoutput(remove_cmd + app)
+	if o != 0:
+
+		fix_install_failed()
+		print("fix remove failed")
+		s1, o1 = getstatusoutput(remove_cmd + app)
+		print("remove again")
+		if o1 != 0:
+			return s1, o1
 	return s, o
 
 
