@@ -105,7 +105,7 @@ def fix_install_failed():
 	getstatusoutput(rm_lock3)
 	getstatusoutput(rm_lock3)
 	getstatusoutput(rm_deb)
-	getstatusoutput(autoremove)
+	#getstatusoutput(autoremove)
 
 
 def install_app(app):
