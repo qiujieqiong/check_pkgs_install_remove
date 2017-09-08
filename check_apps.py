@@ -82,7 +82,7 @@ def get_desktop_name(pkgname):
 	desktop_path = getoutput(desktop_cmd + pkgname)
 	'''
         if desktop_path == '':
-		return
+	    return
 	return desktop_path
 
 
