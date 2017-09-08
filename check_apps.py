@@ -120,7 +120,7 @@ def fix_install_failed():
 
 def install_app(app):
 	s, o = getstatusoutput(install_cmd + app)
-	if o != 0:
+	if s != 0:
 
 		fix_install_failed()
 		print("fix install failed")
@@ -133,7 +133,7 @@ def install_app(app):
 
 def remove_app(app):
 	s, o = getstatusoutput(remove_cmd + app)
-	if o != 0:
+	if s != 0:
 
 		fix_install_failed()
 		print("fix remove failed")
